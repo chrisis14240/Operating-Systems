@@ -14,6 +14,7 @@
 
 #define PORT 3535
 #define BACKLOG 32
+#define NCLIENTS 2
 
 struct dogType {
     int age;
@@ -396,21 +397,23 @@ int main() {
 		exit(-1);
 	}
 
-
-
 	err = listen(fd, BACKLOG);
 	if (err == -1) {
 		perror("error in listen");
 		exit(-1);
 	}
 
-  pthread_t tid;
-  for (int i = 0; i < 32; i++) {
+  pthread_t tid[NCLIENTS];
+  for (int i = 0; i < NCLIENTS; i++) {
     clientSize = 0;
 
     int fd_client = accept(fd, (struct sockaddr*)&client_I, &clientSize);
 
-    pthread_create(&tid, NULL, processRequest, (void *)fd_client);
+    pthread_create(&tid[i], NULL, processRequest, (void *)fd_client);
+  }
+
+  for(int i = 0; i < NCLIENTS; i++) {
+    pthread_join(tid[i], NULL);
   }
 
   file = fopen("dataDogs.dat", "a+");
